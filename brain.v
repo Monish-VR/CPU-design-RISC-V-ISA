@@ -6,9 +6,7 @@ module alu(
     output wire zero,
     output wire [31:0] result
 );
-
 reg [31:0] result_reg;
-//assign wire temp_SRA = A >> B;
 always@(*) begin
     case(control)
     4'b0000 : result_reg = A + B;
