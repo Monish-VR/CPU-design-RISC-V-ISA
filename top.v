@@ -8,7 +8,7 @@ module riscv_top(
     wire [31:0] instruction;
     wire [31:0] pc_plus_4 = pc + 32'd4;
     wire RegWrite;
-    wire [3:0]  ctrl_signal;
+    wire [4:0]  ctrl_signal;
     wire ALUSrc, Immsrc, isbranch, is_branch_instr, isJump, isJumpR;
     reg [31:0] immediate;
     wire [31:0] reg_read_data1;
@@ -110,3 +110,4 @@ always @(*)
   else
         immediate = 32'b0; 
 endmodule
+
