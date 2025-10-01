@@ -93,7 +93,7 @@ module riscv_top(
         .rd(dmem_temp_rslt)
     );
 
-    assign ALUSrc = (instruction[6:0] == 7'b0010011);
+    assign ALUSrc = (instruction[6:0] == 7'b0000011) || (instruction[6:0] == 7'b0010011) || (instruction[6:0] == 7'b0100011) || (instruction[6:0] == 7'b1100111);
     assign alu_input2 = ALUSrc ? immediate : reg_read_data2;
     assign mem_addr = reg_read_data1 + immediate;
 always @(*) 
@@ -110,4 +110,5 @@ always @(*)
   else
         immediate = 32'b0; 
 endmodule
+
 
