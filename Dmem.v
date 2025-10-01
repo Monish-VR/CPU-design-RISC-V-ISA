@@ -4,7 +4,7 @@ module Dmem(
     input clk, we,
     input [31:0] a, wd,
     input [2:0] func3,
-    output [31:0] rd
+    output reg [31:0] rd
 );
   reg [7:0] mem [1023:0] ;
 
@@ -30,6 +30,7 @@ end
 // reading
 wire [31:0] read_data = {mem[{a[31:2], 2'b00}], mem[{a[31:2], 2'b01}], mem[{a[31:2], 2'b10}], mem[{a[31:2], 2'b11}]};
 always @(*) begin
+  rd = 32'hxxxxxxxx;
   if(we == 0) begin
     case (func3)
     3'b000 : begin
