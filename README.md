@@ -1,1 +1,1 @@
-# CPU-design-RISC-V-ISA
+# 3-stage pipelined RV32IM processor design
