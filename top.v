@@ -70,10 +70,10 @@ module riscv_top(
     wire [31:0] new_fd_data2;
     always @(*) begin
         if (rst)
-            tempPC <= 32'h0;
-        else if((ex_is_branch_instr && isbranch) || ex_isJump) tempPC <= ex_pc + ex_immediate;
-            else if(ex_isJumpR) tempPC <=  forward_data_A + ex_immediate;
-            else tempPC <= pc_plus_4;
+            tempPC = 32'h0;
+        else if((ex_is_branch_instr && isbranch) || ex_isJump) tempPC = ex_pc + ex_immediate;
+            else if(ex_isJumpR) tempPC =  forward_data_A + ex_immediate;
+            else tempPC = pc_plus_4;
              //tempPC = ((is_branch_instr && isbranch) || isJump) ? pc + immediate : pc_plus_4;
     end
     Imem imem_inst (
@@ -251,3 +251,4 @@ always @(*)
   else
         fd_immediate = 32'b0; 
 endmodule
+
