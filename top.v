@@ -21,6 +21,8 @@ module riscv_top(
     wire ALUSrc, Immsrc, isbranch, is_branch_instr, fd_is_branch_instr, isJump, fd_isJump, isJumpR, fd_isJumpR;
     wire ex_ALUSrc, ex_is_branch_instr, ex_isJump, ex_isJumpR;
     wire mw_ALUSrc, mw_is_branch_instr, mw_isJump, mw_isJumpR;
+    wire fd_is_lui, ex_is_lui, mw_is_lui;
+    wire fd_is_auipc, ex_is_auipc, mw_is_auipc;
     reg [31:0] immediate;
     wire [31:0] ex_immediate;
     reg [31:0] mw_immediate;
@@ -61,18 +63,21 @@ module riscv_top(
     wire [4:0] ex_rs2_addr;
     wire [4:0] mw_rs2_addr;
     wire fwd_A, fwd_B;
+    wire [31:0] alu_input1;
+  wire [31:0] jalr_data;
     // for control hazard
-      wire flush, stall;
+      wire flush;
     // for data hazard: Data forwarding ;)
     wire [31:0] forward_data_A;
     wire [31:0] forward_data_B;
     wire [31:0] new_fd_data1;
     wire [31:0] new_fd_data2;
+  assign jalr_data = alu_input1 + ex_immediate;
     always @(*) begin
         if (rst)
             tempPC = 32'h0;
         else if((ex_is_branch_instr && isbranch) || ex_isJump) tempPC = ex_pc + ex_immediate;
-            else if(ex_isJumpR) tempPC =  forward_data_A + ex_immediate;
+      else if(ex_isJumpR) tempPC = {jalr_data[31:1], 1'b0};
             else tempPC = pc_plus_4;
              //tempPC = ((is_branch_instr && isbranch) || isJump) ? pc + immediate : pc_plus_4;
     end
@@ -90,7 +95,9 @@ module riscv_top(
       .is_branch_instr(fd_is_branch_instr),
       .is_jmp_instr(fd_isJump),
       .is_jmpr_instr(fd_isJumpR),
-      .wed(fd_write_data)
+      .wed(fd_write_data),
+      .is_lui(fd_is_lui),
+      .is_auipc(fd_is_auipc)
     );
     regFile reg_file_inst (
         .clk(clk),
@@ -126,6 +133,8 @@ module riscv_top(
         .in_func3(fd_func3),
         .in_rs1_addr(fd_rs1_addr),
         .in_rs2_addr(fd_rs2_addr),
+        .in_lui(fd_is_lui),
+        .in_auipc(fd_is_auipc),
 
         .o_rs1_addr(ex_rs1_addr),
         .o_rs2_addr(ex_rs2_addr),
@@ -144,7 +153,9 @@ module riscv_top(
         .o_pc_plus_4(ex_pc_plus_4),
         .o_immediate(ex_immediate),
         .o_rd(ex_rd),
-        .o_func3(ex_func3)
+      .o_func3(ex_func3),
+        .o_lui (ex_is_lui),
+        .o_auipc(ex_is_auipc)
     );
 
     stage2 stage_EXE(
@@ -176,7 +187,7 @@ module riscv_top(
     );
 
     alu alu_inst (
-        .A(forward_data_A),
+      .A(alu_input1),
         .B(alu_input2),
         .control(ex_ctrl_signal),
         .result(ex_alu_result),
@@ -215,11 +226,12 @@ module riscv_top(
     // ALUSrc having load, alu reg, store and JALR respy
     //assign fd_ALUSrc = (instruction[6:0] == 7'b0000011) || (instruction[6:0] == 7'b0010011) || (instruction[6:0] == 7'b0100011) || (instruction[6:0] == 7'b1100111);
     always@(*) begin
-    if((instruction[6:0] == 7'b0000011) || (instruction[6:0] == 7'b0010011) || (instruction[6:0] == 7'b0100011) || (instruction[6:0] == 7'b1100111)) fd_ALUSrc = 1'b1;
+    if((instruction[6:0] == 7'b0000011) || (instruction[6:0] == 7'b0010011) || (instruction[6:0] == 7'b0100011) || (instruction[6:0] == 7'b1100111) || (instruction[6:0] == 7'b0110111) || (instruction[6:0] == 7'b0010111)) fd_ALUSrc = 1'b1;
     else fd_ALUSrc = 1'b0;
   end
     assign branching = isbranch && ex_is_branch_instr;
     assign flush = branching || ex_isJump || ex_isJumpR;
+    assign alu_input1 = (ex_is_lui) ? 32'h0 : (ex_is_auipc) ? ex_pc : forward_data_A;
     assign alu_input2 = ex_ALUSrc ? ex_immediate : forward_data_B;
     assign rd = instruction[11:7];
     assign fd_rs1_addr = instruction[19:15];
@@ -246,9 +258,9 @@ always @(*)
             7'b0100011 : fd_immediate = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]}; // S-type
             7'b1100011 : fd_immediate = {{20{instruction[31]}}, instruction[7], instruction[30:25], instruction[11:8], 1'b0}; // B-type
             7'b1101111 : fd_immediate = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21],1'b0}; // J-type
+            7'b0110111, 7'b0010111: fd_immediate = {instruction[31:12], 12'h000}; // U-type
            default: fd_immediate = 32'b0;
         endcase
   else
-        fd_immediate = 32'b0; 
+        fd_immediate = 32'b0;
 endmodule
-
