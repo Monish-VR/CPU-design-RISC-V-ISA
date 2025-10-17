@@ -4,7 +4,7 @@ module stage1(
 input clk, rst, flush,
 input [31:0] in_A, in_B,
 input [4:0] in_control,
-input in_reg_write, in_wed, in_is_branch_instr, in_is_jmp_instr, in_is_jmpr_instr, in_ALUSrc,
+input in_reg_write, in_wed, in_is_branch_instr, in_is_jmp_instr, in_is_jmpr_instr, in_ALUSrc, in_lui, in_auipc,
 input [1:0] in_Result_Src,
 input [31:0] in_dmem_temp_rslt, in_pc, in_pc_plus_4 , in_immediate,
 input [4:0] in_rd,
@@ -20,6 +20,8 @@ output reg [31:0] o_B,
 output reg [4:0] o_control,
 output reg o_reg_write, 
 output reg o_wed, 
+output reg o_lui, 
+output reg o_auipc,
 output reg o_is_branch_instr, 
 output reg o_is_jmp_instr, 
 output reg o_is_jmpr_instr, 
@@ -51,6 +53,8 @@ always @(posedge clk or posedge rst) begin
         o_func3 <= 0;
         o_rs1_addr <= 0;
         o_rs2_addr <= 0;
+        o_lui <= 0;
+        o_auipc <= 0;
     end else begin
         o_A <= in_A;
         o_B <= in_B;
@@ -70,6 +74,8 @@ always @(posedge clk or posedge rst) begin
         o_func3 <= in_func3;
         o_rs1_addr <= in_rs1_addr;
         o_rs2_addr <= in_rs2_addr;
+        o_lui <= in_lui;
+        o_auipc <= in_auipc;
     end
 end
 endmodule
