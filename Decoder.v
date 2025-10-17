@@ -61,7 +61,7 @@ always@(*) begin
         endcase
     else if(isReg || isImm)
         case({(isReg || isImm), instr[14:12]})
-            4'b1000 : control = (instr[30]) ? 5'h1 : 5'h0;
+            4'b1000 : control = (instr[30] && isReg) ? 5'h1 : 5'h0;
             4'b1100 : control = 5'h4;
             4'b1110 : control = 5'h3;
             4'b1111 : control = 5'h2;
