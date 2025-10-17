@@ -4,7 +4,7 @@ module stage2 (
     input clk, rst, flush,
     input in_RegWrite, in_wed,
     input [1:0] in_result_src,
-    input [31:0] in_pc_plus_4, in_alu_result, in_read_data,
+    input [31:0] in_pc_plus_4, in_alu_result, in_read_data, 
     input [4:0] in_a_wr,
     input [2:0] in_func3,
     input [4:0] in_rs1_addr,
