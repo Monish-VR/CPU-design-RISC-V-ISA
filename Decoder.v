@@ -7,13 +7,14 @@ module decoder(
     output reg [1:0] result_src,
     output reg ImmSrc,
   output is_branch_instr,
-  output is_jmp_instr, is_jmpr_instr
+  output is_jmp_instr, is_jmpr_instr, is_lui, is_auipc
 );
 
 reg reg_writ, write_data_en;
 reg isImm;
 reg isMul;
 reg isJump, isJumpR;
+reg isLui, isAuipc;
 reg isReg;
 reg isBranch;
 reg isLoad, isStore;
@@ -22,7 +23,7 @@ reg isLoad, isStore;
                     (instr[6:0] == 7'b0000011) ||
                     (instr[6:0] == 7'b1100111) ||
                     (instr[6:0] == 7'b0100011) ||
-       (instr[6:0] == 7'b1100011)) ImmSrc = 1'b1;
+       (instr[6:0] == 7'b1100011) || (instr[6:0] == 7'b0110111) || (instr[6:0] == 7'b0010111)) ImmSrc = 1'b1;
     else ImmSrc = 1'b0;
   end
 always@(*) begin
@@ -33,8 +34,10 @@ always@(*) begin
     isJumpR = (instr[6:0] == 7'b1100111);
     isLoad =  (instr[6:0] == 7'b0000011);
     isStore =  (instr[6:0] == 7'b0100011);
+    isLui = (instr[6:0] == 7'b0110111);
+    isAuipc = (instr[6:0] == 7'b0010111);
     isMul = (instr[6:0] == 7'b0110011 && instr[31:25] == 7'b0000001);
-  reg_writ = (isReg || isImm || isJump || isJumpR || isLoad || isMul) ? 1'b1 : 1'b0;
+  reg_writ = (isReg || isImm || isJump || isJumpR || isLoad || isMul || isLui || isAuipc) ? 1'b1 : 1'b0;
   write_data_en = (isStore) ? 1'b1 : 1'b0;
 end
 
@@ -61,7 +64,7 @@ always@(*) begin
         endcase
     else if(isReg || isImm)
         case({(isReg || isImm), instr[14:12]})
-            4'b1000 : control = (instr[30] && isReg) ? 5'h1 : 5'h0;
+          4'b1000 : control = (instr[30] && isReg) ? 5'h1 : 5'h0;
             4'b1100 : control = 5'h4;
             4'b1110 : control = 5'h3;
             4'b1111 : control = 5'h2;
@@ -70,6 +73,7 @@ always@(*) begin
             4'b1010 : control = 5'h9;
             4'b1011 : control = 5'h8;
         endcase
+    else if(isLui || isAuipc) control = 5'h0;
 end
 
 always@(*) begin
@@ -85,4 +89,6 @@ assign reg_write = reg_writ;
 assign is_jmp_instr = isJump;
 assign is_jmpr_instr = isJumpR;
 assign wed = write_data_en;
+assign is_lui = isLui;
+assign is_auipc = isAuipc;
 endmodule
